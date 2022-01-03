@@ -4,26 +4,29 @@ import PySimpleGUI as sg
 import os.path
 import csv
 from itertools import islice
+from collections import OrderedDict
 # First the window layout in 2 columns
 
 file_example_column = [
     [
-        sg.Text("Image Folder"),
+        sg.Text("Altium pick and place file"),
         sg.In(size=(25, 1), enable_events=True, key="-FILE-"),
         sg.FileBrowse(),
     ],
     [
         sg.Listbox(
-            values=[], enable_events=True, size=(40, 20), key="-EXAMPLE_LIST-"
+            values=[], enable_events=True, size=(40, 20), key="-IMPORT-PREVIEW-"
         )
     ],
 ]
 
 # For now will only show the name of the file that was chosen
 image_viewer_column = [
-    [sg.Text("Choose an image from list on left:")],
-    [sg.Text(size=(40, 1), key="-TOUT-")],
-    [sg.Image(key="-IMAGE-")],
+    [sg.Text("On the left, you see stuff!:")],
+    [sg.Listbox(
+            values=[], enable_events=True, size=(40, 20), key="-EXPORT_PREVIEW-"
+        ),
+        sg.Button('Export')]
 ]
 
 # ----- Full layout -----
@@ -36,6 +39,13 @@ layout = [
 ]
 
 window = sg.Window("Altium 2 JLCPCB Pick&Place converter", layout)
+
+# desired output order
+order = ['Designator', 'Center-X(mm)', 'Center-Y(mm)', 'Layer', 'Rotation']
+
+# define renamed columns via dictionary
+renamer = {'Center-Y(mm)': 'Mid Y', 'Center-X(mm)': 'Mid X'}
+columns_renamed = [renamer.get(x, x) for x in order]
 
 # Run the Event Loop
 while True:
@@ -57,21 +67,31 @@ while True:
                         break
                 # read the csv file
                 csvreader = csv.DictReader(csvfile, delimiter=',' )
-                for row in csvreader:
-                    print(row['Designator'], row['Layer'])
-                    example_list.append(row['Designator'])
+                example_list.append('"Designator","Layer","Center-X(mm)","Center-Y(mm)","Rotation"')
+               
+                # Now start printing the example output
+                with open(r'C:\Users\Marco\Documents\dev\IV-infra\CNCShield2\Project Outputs for CNCShieldIvInfra\Pick Place\out.csv', 'w', newline='') as fout:
+                    writer = csv.writer(fout, delimiter=',')
+                    # write new header
+                    writer.writerow(columns_renamed)
+
+                    # iterate reader and write row
+                    for row in csvreader:
+                        print(row['Designator'], row['Layer'])
+                        example_list.append('{},{},{},{}'.format(row["Designator"],row["Layer"],row["Center-X(mm)"],row["Center-Y(mm)"],row["Rotation"]))
+                        writer.writerow([row[k] for k in order])
+
+
         except Exception as e:
             example_list = []
             print(e)
 
-        window["-EXAMPLE_LIST-"].update(example_list)
-    elif event == "-EXAMPLE_LIST-":  # A file was chosen from the listbox
+        window["-IMPORT-PREVIEW-"].update(example_list)
+    elif event == "-IMPORT-PREVIEW-":  # A file was chosen from the listbox
         try:
             filename = os.path.join(
-                values["-FOLDER-"], values["-EXAMPLE_LIST-"][0]
+                values["-FOLDER-"], values["-IMPORT-PREVIEW-"][0]
             )
-            window["-TOUT-"].update(filename)
-            window["-IMAGE-"].update(filename=filename)
 
         except:
             pass
