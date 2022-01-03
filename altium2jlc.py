@@ -14,7 +14,7 @@ file_example_column = [
     ],
     [
         sg.Listbox(
-            values=[], enable_events=True, size=(40, 20), key="-FILE LIST-"
+            values=[], enable_events=True, size=(40, 20), key="-EXAMPLE_LIST-"
         )
     ],
 ]
@@ -45,34 +45,30 @@ while True:
     # file name was filled in
     if event == "-FILE-":
         file = values["-FILE-"]
+        example_list = []
         try:
             # Try to find the header of the CSV file
-            skipCount = 0
-            with open(file, 'r') as csvfile:
+            with open(file, 'r', newline='') as csvfile:
                 while True:
+                    pos = csvfile.tell()
                     line = csvfile.readline()
                     if line[0] == '"': # if the line starts with a "-character, we assume it is the header
+                        csvfile.seek(pos) # go back one line
                         break
-                    skipCount = skipCount+1
-                # read the csv file, but with a start-offset
-                csvreader = csv.reader(islice(csvfile, skipCount-1,None), delimiter=',' )
+                # read the csv file
+                csvreader = csv.DictReader(csvfile, delimiter=',' )
                 for row in csvreader:
-                    print(', '.join(row))
+                    print(row['Designator'], row['Layer'])
+                    example_list.append(row['Designator'])
         except Exception as e:
-            file_list = []
+            example_list = []
             print(e)
 
-        fnames = [
-            f
-            for f in file_list
-            if os.path.isfile(os.path.join(folder, f))
-            and f.lower().endswith((".png", ".gif"))
-        ]
-        window["-FILE LIST-"].update(fnames)
-    elif event == "-FILE LIST-":  # A file was chosen from the listbox
+        window["-EXAMPLE_LIST-"].update(example_list)
+    elif event == "-EXAMPLE_LIST-":  # A file was chosen from the listbox
         try:
             filename = os.path.join(
-                values["-FOLDER-"], values["-FILE LIST-"][0]
+                values["-FOLDER-"], values["-EXAMPLE_LIST-"][0]
             )
             window["-TOUT-"].update(filename)
             window["-IMAGE-"].update(filename=filename)
