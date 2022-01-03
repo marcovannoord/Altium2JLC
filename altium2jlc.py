@@ -11,7 +11,7 @@ file_example_column = [
     [
         sg.Text("Altium pick and place file"),
         sg.In(size=(25, 1), enable_events=True, key="-FILE-"),
-        sg.FileBrowse(),
+        sg.FileBrowse(file_types=(("CSV files", "*.csv"),)),
     ],
     [
         sg.Listbox(
@@ -25,12 +25,12 @@ image_viewer_column = [
     [sg.Text("On the left, you see stuff!:")],
     [sg.Listbox(
             values=[], enable_events=True, size=(40, 20), key="-EXPORT_PREVIEW-"
-        ),
-        sg.Button('Export')]
+        )]
 ]
 
 # ----- Full layout -----
 layout = [
+    [sg.Text("Select an altium Pick&Place file. On the left you see the file, on the right you see the output, that has been written to the same folder as 'pos_jlcpcb.csv")],
     [
         sg.Column(file_example_column),
         sg.VSeperator(),
@@ -56,6 +56,7 @@ while True:
     if event == "-FILE-":
         file = values["-FILE-"]
         example_list = []
+        output_list = []
         try:
             # Try to find the header of the CSV file
             with open(file, 'r', newline='') as csvfile:
@@ -69,24 +70,32 @@ while True:
                 csvreader = csv.DictReader(csvfile, delimiter=',' )
                 example_list.append('"Designator","Layer","Center-X(mm)","Center-Y(mm)","Rotation"')
                
+                outputfile = os.path.join(os.path.dirname(file),"pos_jlcpcb.csv")
                 # Now start printing the example output
-                with open(r'C:\Users\Marco\Documents\dev\IV-infra\CNCShield2\Project Outputs for CNCShieldIvInfra\Pick Place\out.csv', 'w', newline='') as fout:
+                with open(outputfile, 'w', newline='') as fout:
                     writer = csv.writer(fout, delimiter=',')
                     # write new header
                     writer.writerow(columns_renamed)
+                    output_list.append('{},{},{},{},{}'.format(columns_renamed[0], columns_renamed[1], columns_renamed[2], columns_renamed[3], columns_renamed[4]))
 
                     # iterate reader and write row
                     for row in csvreader:
                         print(row['Designator'], row['Layer'])
-                        example_list.append('{},{},{},{}'.format(row["Designator"],row["Layer"],row["Center-X(mm)"],row["Center-Y(mm)"],row["Rotation"]))
-                        writer.writerow([row[k] for k in order])
+                        example_list.append('{},{},{},{},{}'.format(row["Designator"],row["Layer"],row["Center-X(mm)"],row["Center-Y(mm)"],row["Rotation"]))
+                        if row["Layer"] == 'TopLayer':
+                            row["Layer"] = 'Top'
+                        outrow = [row[k] for k in order]
+                        output_list.append('{},{},{},{},{}'.format(outrow[0], outrow[1], outrow[2], outrow[3], outrow[4]))
+                        writer.writerow(outrow)
 
 
         except Exception as e:
             example_list = []
+            output_list = []
             print(e)
 
         window["-IMPORT-PREVIEW-"].update(example_list)
+        window["-EXPORT_PREVIEW-"].update(output_list)
     elif event == "-IMPORT-PREVIEW-":  # A file was chosen from the listbox
         try:
             filename = os.path.join(
