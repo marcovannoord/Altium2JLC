@@ -9,3 +9,9 @@ This tool helps by converting to a format that JLCPCB can open.
 - Open the altium2jlc.exe file.
 - Select the .csv file that Altium generated in the first step.
 - A new file `pos_jlcpcb.csv` will be generated in the same folder as the original file.
+
+# Running from source
+- Make sure you have python 3.8+ and pySimpleGui installed by running `pip install pysimplegui`
+
+# Building executable
+Run `pip install pysimplegui-exemaker` to install the GUI-maker and use `python -m pysimplegui-exemaker.pysimplegui-exemaker` to create the executable 
