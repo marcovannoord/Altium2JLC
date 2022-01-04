@@ -9,20 +9,14 @@ from collections import OrderedDict
 
 file_example_column = [
     [
-        sg.Text("Altium pick and place file"),
-        sg.In(size=(25, 1), enable_events=True, key="-FILE-"),
-        sg.FileBrowse(file_types=(("CSV files", "*.csv"),)),
-    ],
-    [
         sg.Listbox(
             values=[], enable_events=True, size=(40, 20), key="-IMPORT-PREVIEW-"
         )
-    ],
+    ]
 ]
 
 # For now will only show the name of the file that was chosen
 image_viewer_column = [
-    [sg.Text("On the left, you see stuff!:")],
     [sg.Listbox(
             values=[], enable_events=True, size=(40, 20), key="-EXPORT_PREVIEW-"
         )]
@@ -30,7 +24,12 @@ image_viewer_column = [
 
 # ----- Full layout -----
 layout = [
-    [sg.Text("Select an altium Pick&Place file. On the left you see the file, on the right you see the output, that has been written to the same folder as 'pos_jlcpcb.csv")],
+    [sg.Text("Select an altium Pick&Place file. On the left you see the file, on the right you see the result, \nthat has been written to the same folder as 'pos_jlcpcb.csv")],
+    [
+        sg.Text("Altium pick and place file"),
+        sg.In(size=(25, 1), enable_events=True, key="-FILE-"),
+        sg.FileBrowse(file_types=(("CSV files", "*.csv"),)),
+    ],
     [
         sg.Column(file_example_column),
         sg.VSeperator(),
@@ -93,16 +92,6 @@ while True:
             example_list = []
             output_list = []
             print(e)
-
         window["-IMPORT-PREVIEW-"].update(example_list)
         window["-EXPORT_PREVIEW-"].update(output_list)
-    elif event == "-IMPORT-PREVIEW-":  # A file was chosen from the listbox
-        try:
-            filename = os.path.join(
-                values["-FOLDER-"], values["-IMPORT-PREVIEW-"][0]
-            )
-
-        except:
-            pass
-
 window.close()
